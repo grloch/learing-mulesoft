@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="imp-save-user-main" doc:id="a23188fb-caeb-46d9-bd5e-f18b4e2f4abd" >
+		<flow-ref doc:name="Save client" doc:id="76bc7276-1077-48e3-bb19-619bdd589f7a" name="imp-save-userFlow-insert-client"/>
+		<flow-ref doc:name="Insert client Address" doc:id="63471861-0a6c-44df-be97-a97b193a6404" name="imp-save-userFlow-insert-client-address"/>
+		<flow-ref doc:name="Flow Reference" doc:id="20f5163f-1125-444c-8d00-d21de32dba89" name="imp-save-userFlow-insert-phone"/>
+		<ee:transform doc:name="Transform Message" doc:id="ffa3a84c-f2b9-49d1-9768-1c1214a94592" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{	
+	"status":"Success",
+	"message": "Cliente criado com sucesso",
+	inserted:{
+		"usuario": vars.clientId,		
+		"endereco": vars.addressId
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="imp-save-userFlow-insert-client" doc:id="2e307943-5770-4c9e-878f-6b8435b8a2ed" >
+		<db:insert doc:name="Insert" doc:id="f4e6e1f3-d5c8-45b7-ac73-8353caceaf28" config-ref="Heroku_PG" autoGenerateKeys="true">
+			<reconnect-forever />
+			<db:sql><![CDATA[INSERT INTO public.client(
+	name, lastname)
+VALUES (:nome, :sobrenome) RETURNING id_client;]]></db:sql>
+			<db:parameter-types />
+			<db:input-parameters><![CDATA[#[vars.inputPayload]]]></db:input-parameters>
+			<db:auto-generated-keys-column-names>
+				<db:auto-generated-keys-column-name value="id_client" />
+			</db:auto-generated-keys-column-names>
+		</db:insert>
+		<set-variable value="#[payload.generatedKeys.id_client as String]" doc:name="clientId" doc:id="bc9e79f8-babf-4b27-8230-196ad89fcd49" variableName="clientId"/>
+	</flow>
+	<flow name="imp-save-userFlow-insert-client-address" doc:id="3cb9d9b9-dd8c-4b2c-9437-df40a252ef89" >
+		<db:insert doc:name="Insert" doc:id="94368a06-cae2-415f-8a1f-1974d609a7e0" config-ref="Heroku_PG" autoGenerateKeys="true">
+			<db:sql ><![CDATA[INSERT INTO public.address(
+	id_client, zip_code, number, city, state, street, district, complement)
+VALUES (:id_cliente, :cep, :numero, :cidade, :estado, :rua, :bairro, :complemento) RETURNING id_address;
+]]></db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/json
+---
+{	id_cliente: vars.clientId,
+	cep: vars.inputPayload.endereco.cep,
+	numero:vars.inputPayload.endereco.numero,
+	cidade:vars.inputPayload.endereco.cidade,
+	estado:vars.inputPayload.endereco.estado, 
+	rua: vars.inputPayload.endereco.rua,
+	bairro: vars.inputPayload.endereco.bairro,
+	complemento: vars.inputPayload.endereco.complemento
+}]]]></db:input-parameters>
+			<db:auto-generated-keys-column-names >
+				<db:auto-generated-keys-column-name value="id_address" />
+			</db:auto-generated-keys-column-names>
+		</db:insert>
+		<set-variable value="#[payload.generatedKeys.id_address as String]" doc:name="addressId" doc:id="ae87488f-32cf-4210-bc16-a732f56e0808" variableName="addressId"/>
+	</flow>
+	<flow name="imp-save-userFlow-insert-phone" doc:id="70ef5a58-d9ed-41d6-84c6-3917c5f47b20" >
+		<db:bulk-insert doc:name="Bulk insert" doc:id="7269eaa1-4e35-4c13-bcdf-6cbca8f58776" config-ref="Heroku_PG">
+			<db:bulk-input-parameters ><![CDATA[#[%dw 2.0
+output application/json
+---
+vars.inputPayload.telefones map({
+	id_client: vars.clientId,
+    phone_number: ($.ddd as String default "")++($.numero as String default "")
+})]]]></db:bulk-input-parameters>
+			<db:sql ><![CDATA[INSERT INTO public.phone(
+	id_client, phone_number)
+VALUES (:id_client, :phone_number);]]></db:sql>
+		</db:bulk-insert>
+	</flow>
+</mule>

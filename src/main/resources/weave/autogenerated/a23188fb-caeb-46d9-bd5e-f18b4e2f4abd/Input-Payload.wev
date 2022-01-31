@@ -1,0 +1,19 @@
+%dw 2.0
+
+type auto_a23188fb_caeb_46d9_bd5e_f18b4e2f4abd_Input_Payload = {
+  endereco: {
+    cidade: String, 
+    estado: String, 
+    complemento?: String, 
+    numero: String, 
+    bairro: String, 
+    rua: String, 
+    cep: String, 
+    _?: Any
+  }, 
+  nome: String, 
+  sobrenome: String, 
+  telefones: Array<{    numero: Number,     ddd: Number,     _?: Any  }>, 
+  _?: Any
+}
+

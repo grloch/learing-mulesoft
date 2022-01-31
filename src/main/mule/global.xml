@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<db:config name="Heroku_PG" doc:name="Database Config" doc:id="f38faedb-66b4-4f8a-967b-bdd528eea6fa" >
+		<db:generic-connection url="jdbc:postgresql://ec2-3-222-49-168.compute-1.amazonaws.com:5432/dee134i9phcu0i" driverClassName="org.postgresql.Driver" user="lwvtruiajjfcpm" password="e728bd50e5a8e74b9f5de55fa058ba3b588073a210a5a735f913149a36b34914" />
+	</db:config>
+</mule>
