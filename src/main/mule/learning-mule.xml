@@ -128,12 +128,12 @@ output application/json
         <logger level="INFO" message="get:\health-check:learning-mule-config" />
     </flow>
     <flow name="get:\cliente\(id):learning-mule-config">
-        <ee:transform>
+		<ee:transform>
             <ee:variables>
-                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+				<ee:set-variable variableName="clientId" ><![CDATA[attributes.uriParams.'id' as Number]]></ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <logger level="INFO" message="get:\cliente\(id):learning-mule-config" />
+		<flow-ref doc:name="Flow Reference" doc:id="a8bde13b-ef2c-4f24-942d-8ea1ba3aeaf8" name="imp-get-user-main"/>
     </flow>
     <flow name="post:\cliente:application\json:learning-mule-config" doc:id="e781988f-aaf9-4e5f-b2e1-33365ebb2158">
 		<flow-ref doc:name="Flow Reference" doc:id="cea6061b-0573-4547-8e7f-c21b12637ae2" name="imp-save-user-main"/>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="imp-get-user-main" doc:id="d699f97c-4999-4b36-a97a-69579f026586" >
+		<flow-ref doc:name="Flow Reference" doc:id="79cc7593-bd94-4387-bb02-7a37eb297585" name="imp-get-user-bd" />
+	</sub-flow>
+	<sub-flow name="imp-get-user-bd" doc:id="ce2b60f6-a38a-450e-ae0d-145f2af47d90" >
+		<db:select doc:name="Select" doc:id="b5c05d95-26c7-4509-baf4-8ad26faec962" config-ref="Heroku_PG">
+			<db:sql ><![CDATA[select 
+	   c.id_client,
+	   c.name,
+       c.lastname,
+	   a.zip_code,
+	   a.city,
+	   	   a.number,
+	   a.state,
+	   a.street,
+	   a.district,
+	   a.complement,
+	   p.phone_number
+from client c,
+     address a,
+	 phone p 
+where c.id_client = a.id_client 
+  and c.id_client = p.id_client
+  and c.id_client = :clientId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	clientId: vars.clientId
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="05108789-d1ad-495e-98ed-f5e80dc0d1f2">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	nome: payload.name[0],
+	sobrenome: payload.lastname[0],
+	telefones: payload.phone_number map({
+        ddd: $[0 to 1],
+        numero: $[2 to sizeOf($) - 1]
+
+    }),
+    endereco: {
+        cep: payload.zip_code[0],
+        numero: payload.number[0],
+        cidade: payload.city[0],
+        estado: payload.state[0],
+        rua: payload.street[0],
+        bairro: payload.district[0],
+        complemento: payload.complement[0]
+    }
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>
